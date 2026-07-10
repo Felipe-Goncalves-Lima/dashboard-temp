@@ -1,5 +1,7 @@
+import https from 'https';
+import { URL } from 'url';
+
 export default async function handler(req, res) {
-  // Configuração de CORS
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -10,31 +12,49 @@ export default async function handler(req, res) {
     return;
   }
 
-  // Ignorar erro de SSL autoassinado do servidor VPS
-  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-
   const n8nUrl = 'https://n8n-fepmc5vpguo7qlpexgctb9tk.2.24.204.112.sslip.io/webhook/dashboard-ia-summary';
+  const parsedUrl = new URL(n8nUrl);
 
-  try {
-    const fetchOptions = {
-      method: req.method,
-    };
-    
-    // Repassa o corpo da requisição exatamente como o Frontend enviou
+  const options = {
+    hostname: parsedUrl.hostname,
+    port: parsedUrl.port || 443,
+    path: parsedUrl.pathname + parsedUrl.search,
+    method: req.method,
+    rejectUnauthorized: false, // Isso permite bypassar o SSL
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  };
+
+  return new Promise((resolve) => {
+    const backendReq = https.request(options, (backendRes) => {
+      let data = '';
+      backendRes.on('data', chunk => { data += chunk; });
+      backendRes.on('end', () => {
+        try {
+          const json = JSON.parse(data);
+          res.status(200).json(json);
+        } catch(e) {
+          res.status(500).json({ error: 'Erro ao fazer parse do JSON da IA' });
+        }
+        resolve();
+      });
+    });
+
+    backendReq.on('error', (e) => {
+      console.error('Erro no Proxy (IA):', e);
+      res.status(500).json({ error: 'Falha ao buscar resumo IA no n8n' });
+      resolve();
+    });
+
     if (req.method === 'POST') {
-      let bodyData = req.body;
+      let bodyData = req.body || {};
       if (typeof bodyData !== 'string') {
         bodyData = JSON.stringify(bodyData);
       }
-      fetchOptions.body = bodyData;
-      fetchOptions.headers = { 'Content-Type': 'application/json' };
+      backendReq.write(bodyData);
     }
-
-    const response = await fetch(n8nUrl, fetchOptions);
-    const data = await response.json();
-    return res.status(200).json(data);
-  } catch (error) {
-    console.error('Erro no Proxy (IA):', error);
-    return res.status(500).json({ error: 'Falha ao buscar resumo IA no n8n' });
-  }
+    
+    backendReq.end();
+  });
 }
