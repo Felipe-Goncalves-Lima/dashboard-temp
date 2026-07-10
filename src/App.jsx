@@ -217,7 +217,26 @@ function App() {
 
     } else {
       const parsedData = Array.isArray(allData) ? allData[0] : allData;
-      setDashboardData(parsedData);
+      // Se o n8n retornou erro ou dados sem estrutura esperada, criar estado vazio seguro
+      if (parsedData && parsedData.error) {
+        setDashboardData({
+          kpis: { satisfeitos: 0, neutros: 0, insatisfeitos: 0 },
+          priorities: [],
+          enrichedLeads: [],
+          insights: [],
+          generalSummary: 'O n8n conectou, mas não retornou dados do Monday. Verifique se o workflow está ativo e as credenciais configuradas.'
+        });
+      } else if (parsedData && parsedData.kpis) {
+        setDashboardData(parsedData);
+      } else {
+        setDashboardData({
+          kpis: { satisfeitos: 0, neutros: 0, insatisfeitos: 0 },
+          priorities: [],
+          enrichedLeads: [],
+          insights: [],
+          generalSummary: 'Aguardando dados válidos do n8n...'
+        });
+      }
     }
   }, [allData, filter]);
 
@@ -284,17 +303,6 @@ function App() {
     );
   }
 
-  if (dashboardData.error) {
-    return (
-      <div className="dashboard-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column', gap: '20px' }}>
-        <AlertTriangle size={60} color="var(--status-warning)" />
-        <h2 style={{ color: 'var(--text-primary)' }}>Nenhum Dado Encontrado</h2>
-        <p style={{ color: 'var(--text-secondary)' }}>O n8n conectou com sucesso, mas o Monday.com não retornou nenhum cliente.</p>
-        <p style={{ color: 'var(--text-secondary)' }}>Verifique se o seu quadro no Monday tem itens ou se as credenciais estão corretas.</p>
-      </div>
-    );
-  }
-
   const toggleContacted = (id, e) => {
     e.stopPropagation();
     setContactedLeads(prev => {
@@ -348,7 +356,7 @@ function App() {
             </div>
             <div className="kpi-content">
               <h3>Satisfeitos</h3>
-              <div className="kpi-value">{dashboardData.kpis.satisfeitos}</div>
+              <div className="kpi-value">{dashboardData.kpis?.satisfeitos ?? 0}</div>
             </div>
           </div>
           
@@ -358,7 +366,7 @@ function App() {
             </div>
             <div className="kpi-content">
               <h3>Neutros</h3>
-              <div className="kpi-value">{dashboardData.kpis.neutros}</div>
+              <div className="kpi-value">{dashboardData.kpis?.neutros ?? 0}</div>
             </div>
           </div>
 
@@ -368,7 +376,7 @@ function App() {
             </div>
             <div className="kpi-content">
               <h3>Insatisfeitos (Alerta)</h3>
-              <div className="kpi-value">{dashboardData.kpis.insatisfeitos}</div>
+              <div className="kpi-value">{dashboardData.kpis?.insatisfeitos ?? 0}</div>
             </div>
           </div>
         </div>
