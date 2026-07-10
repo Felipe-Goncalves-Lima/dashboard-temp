@@ -284,6 +284,17 @@ function App() {
     );
   }
 
+  if (dashboardData.error) {
+    return (
+      <div className="dashboard-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column', gap: '20px' }}>
+        <AlertTriangle size={60} color="var(--status-warning)" />
+        <h2 style={{ color: 'var(--text-primary)' }}>Nenhum Dado Encontrado</h2>
+        <p style={{ color: 'var(--text-secondary)' }}>O n8n conectou com sucesso, mas o Monday.com não retornou nenhum cliente.</p>
+        <p style={{ color: 'var(--text-secondary)' }}>Verifique se o seu quadro no Monday tem itens ou se as credenciais estão corretas.</p>
+      </div>
+    );
+  }
+
   const toggleContacted = (id, e) => {
     e.stopPropagation();
     setContactedLeads(prev => {
