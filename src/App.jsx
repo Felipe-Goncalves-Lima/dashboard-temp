@@ -35,7 +35,7 @@ function App() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const API_URL = import.meta.env.VITE_API_WEBHOOK_URL || 'http://localhost:5678/webhook/dashboard-data';
+        const API_URL = '/api/dashboard-data';
         
         const response = await fetch(API_URL);
         if (!response.ok) throw new Error('Falha na comunicação com o n8n');
@@ -186,7 +186,7 @@ function App() {
         } else if (currentHash !== lastInsightsHash.current) {
           lastInsightsHash.current = currentHash;
           
-          const API_IA_URL = import.meta.env.VITE_API_IA_WEBHOOK_URL || 'http://localhost:5678/webhook/dashboard-ia-summary';
+          const API_IA_URL = '/api/dashboard-ia-summary';
           
           fetch(API_IA_URL, {
             method: 'POST',
