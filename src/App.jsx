@@ -217,7 +217,6 @@ function App() {
 
     } else {
       const parsedData = Array.isArray(allData) ? allData[0] : allData;
-      // Se o n8n retornou erro ou dados sem estrutura esperada, criar estado vazio seguro
       if (parsedData && parsedData.error) {
         setDashboardData({
           kpis: { satisfeitos: 0, neutros: 0, insatisfeitos: 0 },
