@@ -64,10 +64,11 @@ export default function ClientModal({ client, onClose }) {
     });
   });
 
-  let chartData = historyData.sort((a, b) => a.originalDate - b.originalDate);
+  let chartData = historyData.sort((a, b) => a.originalDate - b.originalDate).map((item, idx) => ({ ...item, id: idx }));
   
   if (chartData.length === 1) {
     chartData.unshift({
+      id: -1,
       date: 'Início',
       score: chartData[0].score,
       originalDate: new Date(chartData[0].originalDate.getTime() - 86400000) 
@@ -112,13 +113,14 @@ export default function ClientModal({ client, onClose }) {
                   <ReferenceArea y1={40} y2={79} fill="rgba(245, 158, 11, 0.05)" />
                   <ReferenceArea y1={0} y2={39} fill="rgba(239, 68, 68, 0.05)" />
                   
-                  <XAxis dataKey="date" stroke="rgba(255,255,255,0.4)" fontSize={11} tickMargin={8} />
+                  <XAxis dataKey="id" stroke="rgba(255,255,255,0.4)" fontSize={11} tickMargin={8} tickFormatter={(val) => { const item = chartData.find(d => d.id === val); return item ? item.date : ''; }} />
                   <YAxis domain={[0, 100]} stroke="rgba(255,255,255,0.4)" fontSize={11} ticks={[0, 40, 80, 100]} />
                   <RechartsTooltip 
                     contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.95)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '8px', padding: '8px' }}
                     itemStyle={{ color: '#60a5fa', fontWeight: 'bold' }}
                     labelStyle={{ color: '#94a3b8', marginBottom: '4px' }}
                     formatter={(value) => [`${value}/100`, 'Saúde']}
+                    labelFormatter={(label) => { const item = chartData.find(d => d.id === label); return item ? item.date : ''; }}
                   />
                   <Line type="monotone" dataKey="score" name="Saúde" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4, fill: '#3b82f6', stroke: '#1e293b', strokeWidth: 2 }} activeDot={{ r: 6 }} />
                 </LineChart>
