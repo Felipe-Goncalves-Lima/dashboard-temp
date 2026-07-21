@@ -579,16 +579,14 @@ function App() {
                                   ⚠️ Queda Brusca
                                 </span>
                               )}
-                              {p.churnRisk > 0 && (
                                 <span className="tag" style={{ 
-                                  background: p.churnRisk >= 90 ? 'rgba(255, 0, 0, 0.2)' : 'rgba(245, 158, 11, 0.1)', 
-                                  color: p.churnRisk >= 90 ? '#ff0000' : 'var(--status-warning)', 
+                                  background: p.churnRisk >= 90 ? 'rgba(255, 0, 0, 0.2)' : (p.churnRisk > 0 ? 'rgba(245, 158, 11, 0.1)' : 'rgba(255,255,255,0.05)'), 
+                                  color: p.churnRisk >= 90 ? '#ff0000' : (p.churnRisk > 0 ? 'var(--status-warning)' : 'var(--text-secondary)'), 
                                   fontWeight: 'bold', 
                                   animation: p.churnRisk >= 90 ? 'pulse 1.5s infinite' : 'none' 
                                 }}>
                                   🔥 Churn: {p.churnRisk}%
                                 </span>
-                              )}
                             </div>
                           </div>
                           
