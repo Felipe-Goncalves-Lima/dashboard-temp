@@ -158,6 +158,20 @@ function App() {
              }
           }
 
+          let score = 0;
+          if (item.updates && item.updates.length > 0) {
+             const lastUpdate = item.updates[0].body.replace(/<[^>]*>?/gm, ' ');
+             const scoreMatch = lastUpdate.match(/Saúde do Cliente:\s*(\d+)\/100/i);
+             if (scoreMatch) score = parseInt(scoreMatch[1], 10);
+          }
+          
+          let trend = 0;
+          if (item.updates && item.updates.length > 1) {
+             const prevUpdate = item.updates[1].body.replace(/<[^>]*>?/gm, ' ');
+             const prevScoreMatch = prevUpdate.match(/Saúde do Cliente:\s*(\d+)\/100/i);
+             if (prevScoreMatch) trend = score - parseInt(prevScoreMatch[1], 10);
+          }
+
           return {
             id: item.id || index,
             name: item.name,
@@ -165,7 +179,8 @@ function App() {
             statusText: statusText,
             company: 'Não identificada',
             role: 'Cliente',
-            score: 0,
+            score: score,
+            trend: trend,
             churnRisk: churnRisk,
             time: filter,
             updates: item.updates || [],
@@ -194,6 +209,13 @@ function App() {
              const scoreMatch = lastUpdate.match(/Saúde do Cliente:\s*(\d+)\/100/i);
              if (scoreMatch) score = parseInt(scoreMatch[1], 10);
           }
+          
+          let trend = 0;
+          if (item.updates && item.updates.length > 1) {
+             const prevUpdate = item.updates[1].body.replace(/<[^>]*>?/gm, ' ');
+             const prevScoreMatch = prevUpdate.match(/Saúde do Cliente:\s*(\d+)\/100/i);
+             if (prevScoreMatch) trend = score - parseInt(prevScoreMatch[1], 10);
+          }
 
           return {
             id: item.id || index,
@@ -203,6 +225,7 @@ function App() {
             company: 'Não identificada',
             role: 'Cliente',
             score: score,
+            trend: trend,
             churnRisk: churnRisk,
             time: filter,
             updates: item.updates || [],
@@ -535,6 +558,12 @@ function App() {
                         else if (isPositive) { statusColor = 'var(--status-success)'; tagBackground = 'rgba(16, 185, 129, 0.1)'; }
                         else if (isNeutral) { statusColor = '#f59e0b'; tagBackground = 'rgba(245, 158, 11, 0.1)'; }
                         
+                        let trendArrow = '';
+                        if (p.trend) {
+                          if (p.trend < 0) trendArrow = ` ↘ ${p.trend}`;
+                          else if (p.trend > 0) trendArrow = ` ↗ +${p.trend}`;
+                        }
+                        
                         return (
                         <div key={p.id} className="priority-item" onClick={() => setSelectedClient(p)} style={{ cursor: 'pointer', transition: 'all 0.3s ease', opacity: isContacted ? 0.5 : 1, transform: isContacted ? 'scale(0.98)' : 'scale(1)' }}>
                           <div className="client-info" style={{ filter: isContacted ? 'grayscale(100%)' : 'none' }}>
@@ -542,9 +571,14 @@ function App() {
                             <p>WhatsApp: {p.telefone}</p>
                             <div className="client-tags">
                               <span className="tag" style={{ background: tagBackground, color: statusColor }}>
-                                {p.statusText || 'NÃO INICIADO'}
+                                {p.statusText || 'NÃO INICIADO'}{trendArrow}
                               </span>
                               <span className="tag">{p.time}</span>
+                              {p.trend <= -30 && (
+                                <span className="tag" style={{ background: 'rgba(239, 68, 68, 0.1)', color: 'var(--status-danger)', fontWeight: 'bold' }}>
+                                  ⚠️ Queda Brusca
+                                </span>
+                              )}
                               {p.churnRisk > 0 && (
                                 <span className="tag" style={{ 
                                   background: p.churnRisk >= 90 ? 'rgba(255, 0, 0, 0.2)' : 'rgba(245, 158, 11, 0.1)', 
