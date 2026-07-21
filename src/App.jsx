@@ -146,6 +146,9 @@ function App() {
           const telCol = item.column_values.find(c => c.id === 'text_mm5ehq7w' || (c.column && c.column.title === 'Telefone'));
           const telefone = telCol && telCol.text ? telCol.text : '';
           
+          const statusCol = item.column_values.find(c => c.id === 'status' || c.id === 'project_status' || (c.column && c.column.title === 'Temperatura'));
+          const statusText = statusCol && statusCol.text ? statusCol.text.toUpperCase() : '';
+
           const resumoCol = item.column_values.find(c => c.id === 'long_text_mm5em2pd' || (c.column && c.column.title === 'Resumo IA'));
           let churnRisk = 0;
           if (resumoCol && resumoCol.text) {
@@ -159,6 +162,7 @@ function App() {
             id: item.id || index,
             name: item.name,
             telefone: telefone,
+            statusText: statusText,
             company: 'Não identificada',
             role: 'Cliente',
             score: 0,
