@@ -604,3 +604,8 @@
     transform: translateY(0) scale(1);
   }
 }
+
+.kpi-icon-wrapper.neutral {
+  color: #9ca3af;
+  background: rgba(156, 163, 175, 0.1);
+}

@@ -11,7 +11,7 @@ import {
 import './App.css';
 import ClientModal from './components/ClientModal';
 
-const COLORS = ['#10b981', '#f59e0b', '#ef4444'];
+const COLORS = ['#10b981', '#9ca3af', '#ef4444'];
 
 function App() {
   const [filter, setFilter] = useState('7 Dias');
@@ -399,7 +399,7 @@ function App() {
           </div>
           
           <div className="glass-panel kpi-card">
-            <div className="kpi-icon-wrapper warning">
+            <div className="kpi-icon-wrapper neutral">
               <MessageSquare size={32} />
             </div>
             <div className="kpi-content">
@@ -467,7 +467,7 @@ function App() {
                   />
                   <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '8px' }} />
                   <Bar name="Satisfeitos" dataKey="satisfeitos" fill="var(--status-success)" radius={[4, 4, 0, 0]} />
-                  <Bar name="Neutros" dataKey="neutros" fill="var(--status-warning)" radius={[4, 4, 0, 0]} />
+                  <Bar name="Neutros" dataKey="neutros" fill="#9ca3af" radius={[4, 4, 0, 0]} />
                   <Bar name="Insatisfeitos" dataKey="insatisfeitos" fill="var(--status-danger)" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
