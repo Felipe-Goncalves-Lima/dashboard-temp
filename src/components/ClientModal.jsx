@@ -44,7 +44,7 @@ export default function ClientModal({ client, onClose }) {
     const actionMatch = cleanBody.match(/Itens de Ação Recomendados:\s*([\s\S]*?)(?=🏢|\[STATUS DA BUSCA\]|\[INFO DESEMPATE\]|\[DEBUG\]|$)/i);
     if (actionMatch) actionItems = actionMatch[1].trim();
 
-    const dateStr = new Date(update.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+    const dateStr = new Date(update.created_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
     
     historyData.push({
       date: dateStr,
