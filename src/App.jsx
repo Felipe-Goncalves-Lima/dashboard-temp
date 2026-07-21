@@ -89,7 +89,7 @@ function App() {
       });
 
       allData.forEach(item => {
-        const statusCol = item.column_values.find(c => c.id === 'status' || (c.column && c.column.title === 'Temperatura'));
+        const statusCol = item.column_values.find(c => c.id === 'status' || c.id === 'project_status' || (c.column && c.column.title === 'Temperatura'));
         const statusText = statusCol ? (statusCol.text || '').toUpperCase() : '';
         
         if (item.created_at) {
@@ -110,10 +110,10 @@ function App() {
       setHistoryData(historyByDate);
 
       filteredArray.forEach(item => {
-        const statusCol = item.column_values.find(c => c.id === 'status' || (c.column && c.column.title === 'Temperatura'));
+        const statusCol = item.column_values.find(c => c.id === 'status' || c.id === 'project_status' || (c.column && c.column.title === 'Temperatura'));
         const statusText = statusCol ? (statusCol.text || '').toUpperCase() : '';
         
-        const resumoCol = item.column_values.find(c => c.column && c.column.title === 'Resumo IA');
+        const resumoCol = item.column_values.find(c => c.id === 'long_text_mm5em2pd' || (c.column && c.column.title === 'Resumo IA'));
         if (resumoCol && resumoCol.text && resumoCol.text.trim() !== '') {
            insights.push({ id: item.id, name: item.name, text: resumoCol.text });
         }
@@ -131,16 +131,16 @@ function App() {
 
       const priorityList = filteredArray
         .filter(item => {
-          const statusCol = item.column_values.find(c => c.column && c.column.title === 'Temperatura');
+          const statusCol = item.column_values.find(c => c.id === 'status' || c.id === 'project_status' || (c.column && c.column.title === 'Temperatura'));
           const statusText = statusCol && statusCol.text ? statusCol.text.toUpperCase() : '';
           return statusText === 'INSATISFEITO' || statusText === 'FRIO';
         })
         .slice(0, 5)  
         .map((item, index) => {
-          const telCol = item.column_values.find(c => c.column && c.column.title === 'Telefone');
+          const telCol = item.column_values.find(c => c.id === 'text_mm5ehq7w' || (c.column && c.column.title === 'Telefone'));
           const telefone = telCol && telCol.text ? telCol.text : '';
           
-          const resumoCol = item.column_values.find(c => c.column && c.column.title === 'Resumo IA');
+          const resumoCol = item.column_values.find(c => c.id === 'long_text_mm5em2pd' || (c.column && c.column.title === 'Resumo IA'));
           let churnRisk = 0;
           if (resumoCol && resumoCol.text) {
              const match = resumoCol.text.match(/\[RISCO DE CHURN\]:\s*(\d+)/i);
