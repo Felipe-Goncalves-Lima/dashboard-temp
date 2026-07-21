@@ -316,7 +316,7 @@ function App() {
     if (!dashboardData || !dashboardData.kpis) return [];
     return [
       { name: 'Satisfeitos', value: dashboardData.kpis.satisfeitos },
-      { name: 'Neutros', value: dashboardData.kpis.neutros },
+      { name: 'Não Iniciados', value: dashboardData.kpis.neutros },
       { name: 'Insatisfeitos', value: dashboardData.kpis.insatisfeitos }
     ];
   }, [dashboardData]);
@@ -403,7 +403,7 @@ function App() {
               <MessageSquare size={32} />
             </div>
             <div className="kpi-content">
-              <h3>Neutros</h3>
+              <h3>Não Iniciados</h3>
               <div className="kpi-value">{dashboardData.kpis?.neutros ?? 0}</div>
             </div>
           </div>
@@ -467,7 +467,7 @@ function App() {
                   />
                   <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '8px' }} />
                   <Bar name="Satisfeitos" dataKey="satisfeitos" fill="var(--status-success)" radius={[4, 4, 0, 0]} />
-                  <Bar name="Neutros" dataKey="neutros" fill="#9ca3af" radius={[4, 4, 0, 0]} />
+                  <Bar name="Não Iniciados" dataKey="neutros" fill="#9ca3af" radius={[4, 4, 0, 0]} />
                   <Bar name="Insatisfeitos" dataKey="insatisfeitos" fill="var(--status-danger)" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -518,7 +518,7 @@ function App() {
                             <p>WhatsApp: {p.telefone}</p>
                             <div className="client-tags">
                               <span className="tag" style={{ background: tagBackground, color: statusColor }}>
-                                {p.statusText || 'NEUTRO'}
+                                {p.statusText || 'NÃO INICIADO'}
                               </span>
                               <span className="tag">{p.time}</span>
                               {p.churnRisk > 0 && (
