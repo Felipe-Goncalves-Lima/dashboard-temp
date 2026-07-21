@@ -27,7 +27,7 @@ export default function ClientModal({ client, onClose }) {
 
     // Mensagem do Cliente
     let messageStr = '';
-    const msgMatch = cleanBody.match(/Cliente .*? disse:\s*"([^"]+)"/i) || cleanBody.match(/Cliente .*? disse:\s*(.*?)(?=📝|⚡|$)/i);
+    const msgMatch = cleanBody.match(/Cliente .*? disse:\s*"([^"]+)"/i) || cleanBody.match(/Cliente .*? disse:\s*([\s\S]*?)(?=📝|⚡|$)/i);
     if (msgMatch) {
        messageStr = msgMatch[1].trim();
     } else {
@@ -36,12 +36,12 @@ export default function ClientModal({ client, onClose }) {
 
     // Resumo
     let resumo = '';
-    const resumoMatch = cleanBody.match(/Resumo e Motivo:\s*(.*?)(?=⚡|$)/i);
+    const resumoMatch = cleanBody.match(/Resumo e Motivo:\s*([\s\S]*?)(?=⚡|$)/i);
     if (resumoMatch) resumo = resumoMatch[1].trim();
 
     // Ações
     let actionItems = '';
-    const actionMatch = cleanBody.match(/Itens de Ação Recomendados:\s*(.*)/i);
+    const actionMatch = cleanBody.match(/Itens de Ação Recomendados:\s*([\s\S]*)/i);
     if (actionMatch) actionItems = actionMatch[1].trim();
 
     const dateStr = new Date(update.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
