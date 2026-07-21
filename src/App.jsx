@@ -163,6 +163,9 @@ function App() {
              const lastUpdate = item.updates[0].body.replace(/<[^>]*>?/gm, ' ');
              const scoreMatch = lastUpdate.match(/Saúde do Cliente:\s*(\d+)\/100/i);
              if (scoreMatch) score = parseInt(scoreMatch[1], 10);
+             
+             const churnUpdateMatch = lastUpdate.match(/Risco de Churn:\s*(\d+)%/i);
+             if (churnUpdateMatch) churnRisk = parseInt(churnUpdateMatch[1], 10);
           }
           
           let trend = 0;
@@ -208,6 +211,9 @@ function App() {
              const lastUpdate = item.updates[0].body.replace(/<[^>]*>?/gm, ' ');
              const scoreMatch = lastUpdate.match(/Saúde do Cliente:\s*(\d+)\/100/i);
              if (scoreMatch) score = parseInt(scoreMatch[1], 10);
+             
+             const churnUpdateMatch = lastUpdate.match(/Risco de Churn:\s*(\d+)%/i);
+             if (churnUpdateMatch) churnRisk = parseInt(churnUpdateMatch[1], 10);
           }
           
           let trend = 0;
