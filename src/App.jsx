@@ -506,8 +506,8 @@ function App() {
                         const isNegative = p.statusText === 'INSATISFEITO' || p.statusText === 'FRIO';
                         const isPositive = p.statusText === 'SATISFEITO' || p.statusText === 'QUENTE';
                         
-                        let statusColor = 'var(--text-secondary)';
-                        let tagBackground = 'rgba(255,255,255,0.05)';
+                        let statusColor = '#9ca3af';
+                        let tagBackground = 'rgba(156, 163, 175, 0.2)';
                         if (isNegative) { statusColor = 'var(--status-danger)'; tagBackground = 'rgba(239, 68, 68, 0.1)'; }
                         else if (isPositive) { statusColor = 'var(--status-success)'; tagBackground = 'rgba(16, 185, 129, 0.1)'; }
                         
