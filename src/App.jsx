@@ -11,7 +11,7 @@ import {
 import './App.css';
 import ClientModal from './components/ClientModal';
 
-const COLORS = ['#10b981', '#f59e0b', '#ef4444', '#9ca3af'];
+const COLORS = ['#10b981', '#f59e0b', '#9ca3af', '#ef4444'];
 
 function App() {
   const [filter, setFilter] = useState('7 Dias');
