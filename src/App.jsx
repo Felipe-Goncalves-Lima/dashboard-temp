@@ -11,7 +11,7 @@ import {
 import './App.css';
 import ClientModal from './components/ClientModal';
 
-const COLORS = ['#10b981', '#9ca3af', '#ef4444'];
+const COLORS = ['#10b981', '#f59e0b', '#ef4444', '#9ca3af'];
 
 function App() {
   const [filter, setFilter] = useState('7 Dias');
@@ -67,7 +67,7 @@ function App() {
     if (!allData) return;
 
     if (allData.length > 0 && allData[0].column_values) {
-      let satisfeitos = 0, neutros = 0, insatisfeitos = 0;
+      let satisfeitos = 0, neutros = 0, insatisfeitos = 0, naoIniciados = 0;
       const insights = [];
       const historyByDate = {};
       
@@ -97,14 +97,16 @@ function App() {
           const dateObj = new Date(item.created_at);
           const dateStr = dateObj.toLocaleDateString('en-CA');
           if (!historyByDate[dateStr]) {
-            historyByDate[dateStr] = { satisfeitos: 0, insatisfeitos: 0, neutros: 0 };
+            historyByDate[dateStr] = { satisfeitos: 0, insatisfeitos: 0, neutros: 0, naoIniciados: 0 };
           }
           if (statusText === 'SATISFEITO' || statusText === 'QUENTE') {
             historyByDate[dateStr].satisfeitos += 1;
           } else if (statusText === 'INSATISFEITO' || statusText === 'FRIO') {
             historyByDate[dateStr].insatisfeitos += 1;
-          } else {
+          } else if (statusText === 'NEUTRO') {
             historyByDate[dateStr].neutros += 1;
+          } else {
+            historyByDate[dateStr].naoIniciados += 1;
           }
         }
       });
@@ -125,8 +127,11 @@ function App() {
         else if (statusText === 'INSATISFEITO' || statusText === 'FRIO') {
           insatisfeitos++;
         }
-        else {
+        else if (statusText === 'NEUTRO') {
           neutros++; 
+        }
+        else {
+          naoIniciados++;
         }
       });
 
@@ -206,7 +211,7 @@ function App() {
       }));
 
       setDashboardData(prev => ({
-        kpis: { satisfeitos, neutros, insatisfeitos },
+        kpis: { satisfeitos, neutros, insatisfeitos, naoIniciados },
         priorities: priorityList,
         allClientsList: allClientsList,
         enrichedLeads: enrichedLeadsList,
@@ -258,7 +263,7 @@ function App() {
       const parsedData = Array.isArray(allData) ? allData[0] : allData;
       if (parsedData && parsedData.error) {
         setDashboardData({
-          kpis: { satisfeitos: 0, neutros: 0, insatisfeitos: 0 },
+          kpis: { satisfeitos: 0, neutros: 0, insatisfeitos: 0, naoIniciados: 0 },
           priorities: [],
           enrichedLeads: [],
           insights: [],
@@ -268,7 +273,7 @@ function App() {
         setDashboardData(parsedData);
       } else {
         setDashboardData({
-          kpis: { satisfeitos: 0, neutros: 0, insatisfeitos: 0 },
+          kpis: { satisfeitos: 0, neutros: 0, insatisfeitos: 0, naoIniciados: 0 },
           priorities: [],
           enrichedLeads: [],
           insights: [],
@@ -306,7 +311,8 @@ function App() {
         day: dayName, 
         satisfeitos: dayData ? dayData.satisfeitos : 0,
         insatisfeitos: dayData ? dayData.insatisfeitos : 0,
-        neutros: dayData ? dayData.neutros : 0
+        neutros: dayData ? dayData.neutros : 0,
+        naoIniciados: dayData ? dayData.naoIniciados : 0
       });
     }
     return data;
@@ -316,7 +322,8 @@ function App() {
     if (!dashboardData || !dashboardData.kpis) return [];
     return [
       { name: 'Satisfeitos', value: dashboardData.kpis.satisfeitos },
-      { name: 'Não Iniciados', value: dashboardData.kpis.neutros },
+      { name: 'Neutros', value: dashboardData.kpis.neutros },
+      { name: 'Não Iniciados', value: dashboardData.kpis.naoIniciados },
       { name: 'Insatisfeitos', value: dashboardData.kpis.insatisfeitos }
     ];
   }, [dashboardData]);
@@ -398,13 +405,23 @@ function App() {
             </div>
           </div>
           
+                    <div className="glass-panel kpi-card">
+            <div className="kpi-icon-wrapper warning">
+              <MessageSquare size={32} />
+            </div>
+            <div className="kpi-content">
+              <h3>Neutros</h3>
+              <div className="kpi-value">{dashboardData.kpis?.neutros ?? 0}</div>
+            </div>
+          </div>
+          
           <div className="glass-panel kpi-card">
             <div className="kpi-icon-wrapper neutral">
               <MessageSquare size={32} />
             </div>
             <div className="kpi-content">
               <h3>Não Iniciados</h3>
-              <div className="kpi-value">{dashboardData.kpis?.neutros ?? 0}</div>
+              <div className="kpi-value">{dashboardData.kpis?.naoIniciados ?? 0}</div>
             </div>
           </div>
 
@@ -467,7 +484,8 @@ function App() {
                   />
                   <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '8px' }} />
                   <Bar name="Satisfeitos" dataKey="satisfeitos" fill="var(--status-success)" radius={[4, 4, 0, 0]} />
-                  <Bar name="Não Iniciados" dataKey="neutros" fill="#9ca3af" radius={[4, 4, 0, 0]} />
+                  <Bar name="Neutros" dataKey="neutros" fill="var(--status-warning)" radius={[4, 4, 0, 0]} />
+                  <Bar name="Não Iniciados" dataKey="naoIniciados" fill="#9ca3af" radius={[4, 4, 0, 0]} />
                   <Bar name="Insatisfeitos" dataKey="insatisfeitos" fill="var(--status-danger)" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -505,11 +523,13 @@ function App() {
                         const isContacted = contactedLeads.has(p.id);
                         const isNegative = p.statusText === 'INSATISFEITO' || p.statusText === 'FRIO';
                         const isPositive = p.statusText === 'SATISFEITO' || p.statusText === 'QUENTE';
+                        const isNeutral = p.statusText === 'NEUTRO';
                         
                         let statusColor = '#9ca3af';
                         let tagBackground = 'rgba(156, 163, 175, 0.2)';
                         if (isNegative) { statusColor = 'var(--status-danger)'; tagBackground = 'rgba(239, 68, 68, 0.1)'; }
                         else if (isPositive) { statusColor = 'var(--status-success)'; tagBackground = 'rgba(16, 185, 129, 0.1)'; }
+                        else if (isNeutral) { statusColor = '#f59e0b'; tagBackground = 'rgba(245, 158, 11, 0.1)'; }
                         
                         return (
                         <div key={p.id} className="priority-item" onClick={() => setSelectedClient(p)} style={{ cursor: 'pointer', transition: 'all 0.3s ease', opacity: isContacted ? 0.5 : 1, transform: isContacted ? 'scale(0.98)' : 'scale(1)' }}>
