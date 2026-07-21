@@ -16,6 +16,7 @@ const COLORS = ['#10b981', '#f59e0b', '#ef4444'];
 function App() {
   const [filter, setFilter] = useState('7 Dias');
   const [insightTab, setInsightTab] = useState('isolado');
+  const [clientTab, setClientTab] = useState('urgentes');
   const [allData, setAllData] = useState(null);
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -162,6 +163,43 @@ function App() {
           };
         });
 
+      const allClientsList = filteredArray.map((item, index) => {
+          const telCol = item.column_values.find(c => c.id === 'text_mm5ehq7w' || (c.column && c.column.title === 'Telefone'));
+          const telefone = telCol && telCol.text ? telCol.text : '';
+          
+          const statusCol = item.column_values.find(c => c.id === 'status' || c.id === 'project_status' || (c.column && c.column.title === 'Temperatura'));
+          const statusText = statusCol && statusCol.text ? statusCol.text.toUpperCase() : '';
+
+          const resumoCol = item.column_values.find(c => c.id === 'long_text_mm5em2pd' || (c.column && c.column.title === 'Resumo IA'));
+          let churnRisk = 0;
+          let score = 50;
+          if (resumoCol && resumoCol.text) {
+             const match = resumoCol.text.match(/\[RISCO DE CHURN\]:\s*(\d+)/i);
+             if (match) {
+                 churnRisk = parseInt(match[1], 10);
+             }
+          }
+
+          if (item.updates && item.updates.length > 0) {
+             const lastUpdate = item.updates[0].body.replace(/<[^>]*>?/gm, ' ');
+             const scoreMatch = lastUpdate.match(/Saúde do Cliente:\s*(\d+)\/100/i);
+             if (scoreMatch) score = parseInt(scoreMatch[1], 10);
+          }
+
+          return {
+            id: item.id || index,
+            name: item.name,
+            telefone: telefone,
+            statusText: statusText,
+            company: 'Não identificada',
+            role: 'Cliente',
+            score: score,
+            churnRisk: churnRisk,
+            time: filter,
+            updates: item.updates || [],
+          };
+      });
+
       const enrichedLeadsList = insights.slice(0, 4).map(i => ({
           name: i.name,
           insight: i.text.length > 90 ? i.text.substring(0, 90) + '...' : i.text
@@ -170,6 +208,7 @@ function App() {
       setDashboardData(prev => ({
         kpis: { satisfeitos, neutros, insatisfeitos },
         priorities: priorityList,
+        allClientsList: allClientsList,
         enrichedLeads: enrichedLeadsList,
         insights: insights, 
         generalSummary: prev && prev.generalSummary ? prev.generalSummary : 'Atualizando análise da IA... ⏳'
@@ -436,48 +475,75 @@ function App() {
           </div>
 
           <div className="glass-panel rescue-panel" style={{ marginTop: '24px' }}>
-              <h2 className="section-title">
-                <ShieldAlert size={24} />
-                Ação Imediata (Resgate)
-              </h2>
+              <div className="insights-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <h2 className="section-title" style={{ margin: 0 }}>
+                  <ShieldAlert size={24} />
+                  Listagem de Clientes
+                </h2>
+                <div className="tab-container">
+                  <button 
+                    className={`tab-btn ${clientTab === 'urgentes' ? 'active' : ''}`}
+                    onClick={() => setClientTab('urgentes')}
+                  >
+                    Ação Imediata (Resgate)
+                  </button>
+                  <button 
+                    className={`tab-btn ${clientTab === 'todos' ? 'active' : ''}`}
+                    onClick={() => setClientTab('todos')}
+                  >
+                    Todos os Clientes
+                  </button>
+                </div>
+              </div>
               
-              {dashboardData.priorities && dashboardData.priorities.length > 0 ? (
-              <div className="priority-list">
-                {dashboardData.priorities.map(p => {
-                  const isContacted = contactedLeads.has(p.id);
+              {(() => {
+                const displayList = clientTab === 'urgentes' ? dashboardData.priorities : dashboardData.allClientsList;
+                if (displayList && displayList.length > 0) {
                   return (
-                  <div key={p.id} className="priority-item" onClick={() => setSelectedClient(p)} style={{ cursor: 'pointer', transition: 'all 0.3s ease', opacity: isContacted ? 0.5 : 1, transform: isContacted ? 'scale(0.98)' : 'scale(1)' }}>
-                    <div className="client-info" style={{ filter: isContacted ? 'grayscale(100%)' : 'none' }}>
-                      <h4 style={{ textDecoration: isContacted ? 'line-through' : 'none', color: isContacted ? 'var(--text-secondary)' : 'var(--text-primary)' }}>{p.name}</h4>
-                      <p>WhatsApp: {p.telefone}</p>
-                      <div className="client-tags">
-                        <span className="tag" style={{ background: 'rgba(239, 68, 68, 0.1)', color: 'var(--status-danger)' }}>
-                          Urgente
-                        </span>
-                        <span className="tag">{p.time}</span>
-                        {p.churnRisk > 0 && (
-                          <span className="tag" style={{ 
-                            background: p.churnRisk >= 90 ? 'rgba(255, 0, 0, 0.2)' : 'rgba(245, 158, 11, 0.1)', 
-                            color: p.churnRisk >= 90 ? '#ff0000' : 'var(--status-warning)', 
-                            fontWeight: 'bold', 
-                            animation: p.churnRisk >= 90 ? 'pulse 1.5s infinite' : 'none' 
-                          }}>
-                            🔥 Churn: {p.churnRisk}%
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                      <button 
-                        onClick={(e) => toggleContacted(p.id, e)}
-                        style={{ 
-                          background: isContacted ? 'var(--status-success)' : 'rgba(255,255,255,0.05)',
-                          border: `1px solid ${isContacted ? 'var(--status-success)' : 'rgba(255,255,255,0.1)'}`,
-                          color: isContacted ? '#000' : 'var(--text-secondary)',
-                          width: '40px', height: '40px', borderRadius: '8px',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          cursor: 'pointer', transition: 'all 0.2s',
+                    <div className="priority-list">
+                      {displayList.map(p => {
+                        const isContacted = contactedLeads.has(p.id);
+                        const isNegative = p.statusText === 'INSATISFEITO' || p.statusText === 'FRIO';
+                        const isPositive = p.statusText === 'SATISFEITO' || p.statusText === 'QUENTE';
+                        
+                        let statusColor = 'var(--text-secondary)';
+                        let tagBackground = 'rgba(255,255,255,0.05)';
+                        if (isNegative) { statusColor = 'var(--status-danger)'; tagBackground = 'rgba(239, 68, 68, 0.1)'; }
+                        else if (isPositive) { statusColor = 'var(--status-success)'; tagBackground = 'rgba(16, 185, 129, 0.1)'; }
+                        
+                        return (
+                        <div key={p.id} className="priority-item" onClick={() => setSelectedClient(p)} style={{ cursor: 'pointer', transition: 'all 0.3s ease', opacity: isContacted ? 0.5 : 1, transform: isContacted ? 'scale(0.98)' : 'scale(1)' }}>
+                          <div className="client-info" style={{ filter: isContacted ? 'grayscale(100%)' : 'none' }}>
+                            <h4 style={{ textDecoration: isContacted ? 'line-through' : 'none', color: isContacted ? 'var(--text-secondary)' : 'var(--text-primary)' }}>{p.name}</h4>
+                            <p>WhatsApp: {p.telefone}</p>
+                            <div className="client-tags">
+                              <span className="tag" style={{ background: tagBackground, color: statusColor }}>
+                                {p.statusText || 'NEUTRO'}
+                              </span>
+                              <span className="tag">{p.time}</span>
+                              {p.churnRisk > 0 && (
+                                <span className="tag" style={{ 
+                                  background: p.churnRisk >= 90 ? 'rgba(255, 0, 0, 0.2)' : 'rgba(245, 158, 11, 0.1)', 
+                                  color: p.churnRisk >= 90 ? '#ff0000' : 'var(--status-warning)', 
+                                  fontWeight: 'bold', 
+                                  animation: p.churnRisk >= 90 ? 'pulse 1.5s infinite' : 'none' 
+                                }}>
+                                  🔥 Churn: {p.churnRisk}%
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          
+                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            <button 
+                              onClick={(e) => toggleContacted(p.id, e)}
+                              style={{ 
+                                background: isContacted ? 'var(--status-success)' : 'rgba(255,255,255,0.05)',
+                                border: `1px solid ${isContacted ? 'var(--status-success)' : 'rgba(255,255,255,0.1)'}`,
+                                color: isContacted ? '#000' : 'var(--text-secondary)',
+                                width: '40px', height: '40px', borderRadius: '8px',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                cursor: 'pointer', transition: 'all 0.2s',
                           boxShadow: isContacted ? '0 0 10px rgba(16, 185, 129, 0.4)' : 'none'
                         }}
                         title={isContacted ? 'Desmarcar' : 'Marcar como contatado'}
@@ -502,14 +568,19 @@ function App() {
                   );
                 })}
               </div>
-              ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', gap: '12px', opacity: 0.7 }}>
-                <CheckCircle2 size={48} style={{ color: 'var(--status-success)' }} />
-                <p style={{ color: 'var(--text-secondary)', fontSize: '15px', textAlign: 'center', margin: 0 }}>
-                  Tudo tranquilo! Nenhum cliente precisa de atenção imediata. 🎉
-                </p>
-              </div>
-              )}
+                  );
+                }
+                return (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', gap: '12px', opacity: 0.7 }}>
+                    <CheckCircle2 size={48} style={{ color: 'var(--status-success)' }} />
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '15px', textAlign: 'center', margin: 0 }}>
+                      {clientTab === 'urgentes' 
+                        ? 'Tudo tranquilo! Nenhum cliente precisa de atenção imediata. 🎉' 
+                        : 'Nenhum cliente encontrado neste período.'}
+                    </p>
+                  </div>
+                );
+              })()}
             </div>
         </div>
 
