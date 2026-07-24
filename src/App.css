@@ -5,6 +5,14 @@
   padding: 32px 24px;
 }
 
+.global-filters {
+  display: flex;
+  gap: 24px;
+  padding: 16px 24px;
+  margin-bottom: 24px;
+  align-items: center;
+}
+
 .header {
   display: flex;
   justify-content: space-between;
@@ -368,6 +376,13 @@
 }
 
 @media (max-width: 1024px) {
+  .global-filters {
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
   .top-grid {
     grid-template-columns: 1fr;
   }
@@ -394,6 +409,10 @@
   }
   .header {
     margin-bottom: 24px;
+  }
+  .global-filters {
+    flex-direction: column;
+    align-items: flex-start;
   }
   .kpi-grid {
     grid-template-columns: 1fr;
