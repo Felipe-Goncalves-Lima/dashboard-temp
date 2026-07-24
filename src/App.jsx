@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { 
-  Activity, AlertTriangle, CheckCircle2, ChevronRight, 
+  Activity, AlertTriangle, CheckCircle2, ChevronRight, ChevronDown,
   MessageSquare, ShieldAlert, Sparkles, Zap, Building2, UserCircle2, Target, Calendar
 } from 'lucide-react';
 import { 
@@ -11,7 +11,109 @@ import {
 import './App.css';
 import ClientModal from './components/ClientModal';
 
-const COLORS = ['#10b981', '#f59e0b', '#9ca3af', '#ef4444'];
+const COLORS = ['#00e676', '#fbbf24', '#64748b', '#f43f5e'];
+const COMPLAINT_COLORS = ['#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899', '#f43f5e'];
+
+const CustomSelect = ({ value, onChange, options, placeholder }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    const handleClick = (e) => { if (ref.current && !ref.current.contains(e.target)) setIsOpen(false); };
+    document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
+  }, []);
+  
+  return (
+    <div ref={ref} style={{ position: 'relative' }}>
+       <button onClick={() => setIsOpen(!isOpen)} className="tab-btn active" style={{ display: 'flex', gap: '8px', alignItems: 'center', minWidth: '120px', justifyContent: 'space-between' }}>
+          {value === 'Todos' ? placeholder : value}
+          <ChevronDown size={14} />
+       </button>
+       {isOpen && (
+         <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '4px', background: 'var(--bg-card)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '4px', zIndex: 9999, minWidth: '100%', boxShadow: '0 4px 12px rgba(0,0,0,0.5)', maxHeight: '250px', overflowY: 'auto' }}>
+            <div 
+              style={{ padding: '8px 12px', cursor: 'pointer', borderRadius: '4px', color: value === 'Todos' ? 'var(--primary)' : '#fff', background: value === 'Todos' ? 'rgba(255,255,255,0.05)' : 'transparent', fontSize: '13px' }}
+              onClick={() => { onChange('Todos'); setIsOpen(false); }}
+            >
+              Todos
+            </div>
+            {options.map(opt => (
+              <div 
+                key={opt}
+                style={{ padding: '8px 12px', cursor: 'pointer', borderRadius: '4px', color: value === opt ? 'var(--primary)' : '#fff', background: value === opt ? 'rgba(255,255,255,0.05)' : 'transparent', fontSize: '13px' }}
+                onClick={() => { onChange(opt); setIsOpen(false); }}
+              >
+                {opt}
+              </div>
+            ))}
+         </div>
+       )}
+    </div>
+  );
+};
+
+const SearchableSelect = ({ value, onChange, options, placeholder }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const ref = useRef(null);
+  
+  useEffect(() => {
+    const handleClick = (e) => { 
+      if (ref.current && !ref.current.contains(e.target)) setIsOpen(false); 
+    };
+    document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
+  }, []);
+  
+  const filteredOptions = options.filter(opt => opt.toLowerCase().includes(searchTerm.toLowerCase()));
+  
+  return (
+    <div ref={ref} style={{ position: 'relative', width: '250px' }}>
+       <div 
+         className="tab-btn active" 
+         style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', width: '100%', cursor: 'pointer' }}
+         onClick={() => setIsOpen(!isOpen)}
+       >
+         {value === 'Todos' ? placeholder : (value.length > 20 ? value.substring(0, 20) + '...' : value)}
+         <ChevronDown size={14} />
+       </div>
+       
+       {isOpen && (
+         <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: '4px', background: 'var(--bg-card)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '8px', zIndex: 9999, width: '100%', boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }}>
+            <input 
+              type="text" 
+              placeholder="Pesquisar..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+              style={{ width: '100%', padding: '8px', marginBottom: '8px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', color: '#fff', outline: 'none' }}
+              autoFocus
+            />
+            <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+              <div 
+                style={{ padding: '8px 12px', cursor: 'pointer', borderRadius: '4px', color: value === 'Todos' ? 'var(--primary)' : '#fff', background: value === 'Todos' ? 'rgba(255,255,255,0.05)' : 'transparent', fontSize: '13px' }}
+                onClick={() => { onChange('Todos'); setIsOpen(false); setSearchTerm(''); }}
+              >
+                Todos
+              </div>
+              {filteredOptions.length === 0 && (
+                <div style={{ padding: '8px 12px', color: '#9ca3af', fontSize: '13px' }}>Nenhum encontrado</div>
+              )}
+              {filteredOptions.map(opt => (
+                <div 
+                  key={opt}
+                  style={{ padding: '8px 12px', cursor: 'pointer', borderRadius: '4px', color: value === opt ? 'var(--primary)' : '#fff', background: value === opt ? 'rgba(255,255,255,0.05)' : 'transparent', fontSize: '13px' }}
+                  onClick={() => { onChange(opt); setIsOpen(false); setSearchTerm(''); }}
+                >
+                  {opt}
+                </div>
+              ))}
+            </div>
+         </div>
+       )}
+    </div>
+  );
+};
 
 function App() {
   const [filter, setFilter] = useState('7 Dias');
@@ -21,6 +123,12 @@ function App() {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [chartGroupFilter, setChartGroupFilter] = useState('Todos');
+  const [chartClientFilter, setChartClientFilter] = useState('Todos');
+
+  useEffect(() => {
+    setChartClientFilter('Todos');
+  }, [chartGroupFilter]);
   const [historyData, setHistoryData] = useState({});
   const [selectedClient, setSelectedClient] = useState(null);
   const [contactedLeads, setContactedLeads] = useState(() => {
@@ -32,6 +140,29 @@ function App() {
     }
   });
   const lastInsightsHash = useRef('');
+
+  const availableGroups = useMemo(() => {
+    if (!allData) return [];
+    const groups = new Set();
+    allData.forEach(item => {
+      if (item.group && item.group.title) {
+        groups.add(item.group.title);
+      }
+    });
+    return Array.from(groups);
+  }, [allData]);
+
+  const availableClients = useMemo(() => {
+    if (!allData) return [];
+    const clients = new Set();
+    allData.forEach(item => {
+      if (chartGroupFilter !== 'Todos' && (!item.group || item.group.title !== chartGroupFilter)) return;
+      if (item.name) {
+        clients.add(item.name);
+      }
+    });
+    return Array.from(clients);
+  }, [allData, chartGroupFilter]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -73,7 +204,13 @@ function App() {
       
       const now = new Date();
       
-      const filteredArray = allData.filter(item => {
+      const baseFilteredArray = allData.filter(item => {
+        if (chartGroupFilter !== 'Todos' && (!item.group || item.group.title !== chartGroupFilter)) return false;
+        if (chartClientFilter !== 'Todos' && item.name !== chartClientFilter) return false;
+        return true;
+      });
+
+      const filteredArray = baseFilteredArray.filter(item => {
         if (!item.created_at) return true;
         const itemDate = new Date(item.created_at);
         const diffTime = Math.abs(now - itemDate);
@@ -89,21 +226,60 @@ function App() {
         return true;
       });
 
-      allData.forEach(item => {
-        const statusCol = item.column_values.find(c => c.id === 'status' || c.id === 'project_status' || (c.column && c.column.title === 'Temperatura'));
-        const statusText = statusCol ? (statusCol.text || '').toUpperCase() : '';
+      baseFilteredArray.forEach(item => {
         
-        if (item.created_at) {
-          const dateObj = new Date(item.created_at);
+        if (item.updates && item.updates.length > 0) {
+          item.updates.forEach(update => {
+            if (update.created_at) {
+              const dateObj = new Date(update.created_at);
+              const dateStr = dateObj.toLocaleDateString('en-CA');
+              
+              if (!historyByDate[dateStr]) {
+                historyByDate[dateStr] = { totalScore: 0, count: 0, satisfeitos: 0, insatisfeitos: 0, neutros: 0, naoIniciados: 0 };
+              }
+
+              const cleanBody = update.body.replace(/<[^>]*>?/gm, ' ').trim();
+              const scoreMatch = cleanBody.match(/Saúde do Cliente:\s*(\d+)\/100(?:\s*\(([^)]+)\))?/i);
+              if (scoreMatch && scoreMatch[1]) {
+                const s = parseInt(scoreMatch[1], 10);
+                historyByDate[dateStr].totalScore += s;
+                historyByDate[dateStr].count += 1;
+                
+                let label = 'NEUTRO';
+                if (scoreMatch[2]) label = scoreMatch[2].toUpperCase();
+                
+                if (label === 'SATISFEITO' || label === 'QUENTE') {
+                  historyByDate[dateStr].satisfeitos += 1;
+                } else if (label === 'INSATISFEITO' || label === 'FRIO') {
+                  historyByDate[dateStr].insatisfeitos += 1;
+                } else {
+                  historyByDate[dateStr].neutros += 1;
+                }
+              }
+            }
+          });
+        } else if (item.updated_at || item.created_at) {
+          const dateObj = new Date(item.updated_at || item.created_at);
           const dateStr = dateObj.toLocaleDateString('en-CA');
+          
           if (!historyByDate[dateStr]) {
-            historyByDate[dateStr] = { satisfeitos: 0, insatisfeitos: 0, neutros: 0, naoIniciados: 0 };
+            historyByDate[dateStr] = { totalScore: 0, count: 0, satisfeitos: 0, insatisfeitos: 0, neutros: 0, naoIniciados: 0 };
           }
+
+          const statusCol = item.column_values ? item.column_values.find(c => c.id === 'status' || c.id === 'project_status' || (c.column && c.column.title === 'Temperatura')) : null;
+          const statusText = statusCol ? (statusCol.text || '').toUpperCase() : '';
+
           if (statusText === 'SATISFEITO' || statusText === 'QUENTE') {
+            historyByDate[dateStr].totalScore += 100;
+            historyByDate[dateStr].count += 1;
             historyByDate[dateStr].satisfeitos += 1;
           } else if (statusText === 'INSATISFEITO' || statusText === 'FRIO') {
+            historyByDate[dateStr].totalScore += 0;
+            historyByDate[dateStr].count += 1;
             historyByDate[dateStr].insatisfeitos += 1;
           } else if (statusText === 'NEUTRO') {
+            historyByDate[dateStr].totalScore += 50;
+            historyByDate[dateStr].count += 1;
             historyByDate[dateStr].neutros += 1;
           } else {
             historyByDate[dateStr].naoIniciados += 1;
@@ -159,18 +335,32 @@ function App() {
           }
 
           let score = 0;
+          let offensorTag = null;
           if (item.updates && item.updates.length > 0) {
-             const lastUpdate = item.updates[0].body.replace(/<[^>]*>?/gm, ' ');
+             const lastUpdate = item.updates[0].body.replace(/<[^>]*>?/gm, ' ').replace(/&nbsp;/gi, ' ');
              const scoreMatch = lastUpdate.match(/Saúde do Cliente:\s*(\d+)\/100/i);
              if (scoreMatch) score = parseInt(scoreMatch[1], 10);
              
              const churnUpdateMatch = lastUpdate.match(/Risco de Churn:\s*(\d+)%/i);
              if (churnUpdateMatch) churnRisk = parseInt(churnUpdateMatch[1], 10);
+             
+             const tagsSet = new Set();
+             for (let u of item.updates) {
+                 const text = u.body.replace(/<[^>]*>?/gm, ' ').replace(/&nbsp;/gi, ' ');
+                 const match = text.match(/Categoria Ofensor:[^#A-Za-z0-9À-ÖØ-öø-ÿ]*#?[^A-Za-z0-9À-ÖØ-öø-ÿ]*([\wÀ-ÖØ-öø-ÿ]+)/i);
+                 if (match && match[1].toLowerCase() !== 'nenhum') {
+                     tagsSet.add("#" + match[1]);
+                 }
+             }
+             item.allOffensorTags = Array.from(tagsSet);
+             if (item.allOffensorTags.length > 0) {
+                 offensorTag = item.allOffensorTags[0]; 
+             }
           }
           
           let trend = 0;
           if (item.updates && item.updates.length > 1) {
-             const prevUpdate = item.updates[1].body.replace(/<[^>]*>?/gm, ' ');
+             const prevUpdate = item.updates[1].body.replace(/<[^>]*>?/gm, ' ').replace(/&nbsp;/gi, ' ');
              const prevScoreMatch = prevUpdate.match(/Saúde do Cliente:\s*(\d+)\/100/i);
              if (prevScoreMatch) trend = score - parseInt(prevScoreMatch[1], 10);
           }
@@ -185,6 +375,8 @@ function App() {
             score: score,
             trend: trend,
             churnRisk: churnRisk,
+            offensorTag: offensorTag,
+            allOffensorTags: item.allOffensorTags || [],
             time: filter,
             updates: item.updates || [],
           };
@@ -200,6 +392,7 @@ function App() {
           const resumoCol = item.column_values.find(c => c.id === 'long_text_mm5em2pd' || (c.column && c.column.title === 'Resumo IA'));
           let churnRisk = 0;
           let score = 50;
+          let offensorTag = null;
           if (resumoCol && resumoCol.text) {
              const match = resumoCol.text.match(/\[RISCO DE CHURN\]:\s*(\d+)/i);
              if (match) {
@@ -208,17 +401,30 @@ function App() {
           }
 
           if (item.updates && item.updates.length > 0) {
-             const lastUpdate = item.updates[0].body.replace(/<[^>]*>?/gm, ' ');
+             const lastUpdate = item.updates[0].body.replace(/<[^>]*>?/gm, ' ').replace(/&nbsp;/gi, ' ');
              const scoreMatch = lastUpdate.match(/Saúde do Cliente:\s*(\d+)\/100/i);
              if (scoreMatch) score = parseInt(scoreMatch[1], 10);
              
              const churnUpdateMatch = lastUpdate.match(/Risco de Churn:\s*(\d+)%/i);
              if (churnUpdateMatch) churnRisk = parseInt(churnUpdateMatch[1], 10);
+             
+             const tagsSet = new Set();
+             for (let u of item.updates) {
+                 const text = u.body.replace(/<[^>]*>?/gm, ' ').replace(/&nbsp;/gi, ' ');
+                 const match = text.match(/Categoria Ofensor:[^#A-Za-z0-9À-ÖØ-öø-ÿ]*#?[^A-Za-z0-9À-ÖØ-öø-ÿ]*([\wÀ-ÖØ-öø-ÿ]+)/i);
+                 if (match && match[1].toLowerCase() !== 'nenhum') {
+                     tagsSet.add("#" + match[1]);
+                 }
+             }
+             item.allOffensorTags = Array.from(tagsSet);
+             if (item.allOffensorTags.length > 0) {
+                 offensorTag = item.allOffensorTags[0];
+             }
           }
           
           let trend = 0;
           if (item.updates && item.updates.length > 1) {
-             const prevUpdate = item.updates[1].body.replace(/<[^>]*>?/gm, ' ');
+             const prevUpdate = item.updates[1].body.replace(/<[^>]*>?/gm, ' ').replace(/&nbsp;/gi, ' ');
              const prevScoreMatch = prevUpdate.match(/Saúde do Cliente:\s*(\d+)\/100/i);
              if (prevScoreMatch) trend = score - parseInt(prevScoreMatch[1], 10);
           }
@@ -233,10 +439,12 @@ function App() {
             score: score,
             trend: trend,
             churnRisk: churnRisk,
+            offensorTag: offensorTag,
+            allOffensorTags: item.allOffensorTags || [],
             time: filter,
             updates: item.updates || [],
           };
-      });
+      }).sort((a, b) => a.score - b.score);
 
       const enrichedLeadsList = insights.slice(0, 4).map(i => ({
           name: i.name,
@@ -314,7 +522,7 @@ function App() {
         });
       }
     }
-  }, [allData, filter]);
+  }, [allData, filter, chartGroupFilter, chartClientFilter]);
 
   const trendData = useMemo(() => {
     const data = [];
@@ -330,22 +538,35 @@ function App() {
       let dayName = d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
       dayName = dayName.charAt(0).toUpperCase() + dayName.slice(1);
       
-      if (filter === 'Hoje') {
-        dayName = i === 1 ? 'Ontem' : 'Hoje';
-      } else if (i === 0) {
-        dayName = 'Hoje';
+      if (filter === '30 Dias') {
+        dayName = dateFormatted;
+      } else {
+        if (filter === 'Hoje') {
+          dayName = i === 1 ? 'Ontem' : 'Hoje';
+        } else if (i === 0) {
+          dayName = 'Hoje';
+        }
+        dayName = `${dayName} (${dateFormatted})`;
       }
       
-      dayName = `${dayName} (${dateFormatted})`;
-      
       const dayData = historyData[dateStr];
+      let avgScore = 0;
+      let isNaoIniciadoOnly = false;
+      if (dayData && dayData.count > 0) {
+        avgScore = Math.round(dayData.totalScore / dayData.count);
+      } else if (dayData && dayData.naoIniciados > 0) {
+        avgScore = 5;
+        isNaoIniciadoOnly = true;
+      }
       
       data.push({ 
         day: dayName, 
+        avgScore: avgScore,
         satisfeitos: dayData ? dayData.satisfeitos : 0,
         insatisfeitos: dayData ? dayData.insatisfeitos : 0,
         neutros: dayData ? dayData.neutros : 0,
-        naoIniciados: dayData ? dayData.naoIniciados : 0
+        naoIniciados: dayData ? dayData.naoIniciados : 0,
+        isNaoIniciadoOnly: isNaoIniciadoOnly
       });
     }
     return data;
@@ -356,9 +577,27 @@ function App() {
     return [
       { name: 'Satisfeitos', value: dashboardData.kpis.satisfeitos },
       { name: 'Neutros', value: dashboardData.kpis.neutros },
-      { name: 'Não Iniciados', value: dashboardData.kpis.naoIniciados },
-      { name: 'Insatisfeitos', value: dashboardData.kpis.insatisfeitos }
+      { name: 'Insatisfeitos', value: dashboardData.kpis.insatisfeitos },
+      { name: 'Não Iniciados', value: dashboardData.kpis.naoIniciados }
     ];
+  }, [dashboardData]);
+
+  useEffect(() => { window.dashboardDataDebug = dashboardData; }, [dashboardData]);
+  const ofensoresData = useMemo(() => {
+    if (!dashboardData || !dashboardData.allClientsList) return [];
+    const counts = {};
+    dashboardData.allClientsList.forEach(c => {
+      if (c.updates && c.updates.length > 0 && c.allOffensorTags) {
+        c.allOffensorTags.forEach(tag => {
+           counts[tag] = (counts[tag] || 0) + 1;
+        });
+      } else if (c.offensorTag && c.offensorTag.toLowerCase() !== '#nenhum') { 
+        counts[c.offensorTag] = (counts[c.offensorTag] || 0) + 1;
+      }
+    });
+    return Object.entries(counts)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value);
   }, [dashboardData]);
 
   if (loading) {
@@ -395,6 +634,53 @@ function App() {
     });
   };
 
+  const generateSmartInsights = () => {
+    if (!trendData || trendData.length === 0) return ["Aguardando dados para análise..."];
+    
+    let insights = [];
+    
+    let contexto = "toda a base";
+    if (chartClientFilter !== 'Todos') contexto = `o cliente ${chartClientFilter}`;
+    else if (chartGroupFilter !== 'Todos') contexto = `o grupo ${chartGroupFilter}`;
+
+    let piorDia = null;
+    let menorScore = 101;
+    let temDado = false;
+    
+    trendData.forEach(d => {
+      const hasInteractions = (d.satisfeitos + d.insatisfeitos + d.neutros) > 0;
+      if (hasInteractions && !d.isNaoIniciadoOnly && d.avgScore < menorScore) {
+        menorScore = d.avgScore;
+        piorDia = d.day;
+        temDado = true;
+      }
+    });
+
+    if (temDado && menorScore <= 50) {
+      insights.push(`🚨 O pior momento para ${contexto} foi **${piorDia}** (Média: ${menorScore}/100).`);
+    } else if (temDado && menorScore > 80) {
+      insights.push(`✨ ${contexto} está com excelente retenção! O pior dia (${piorDia}) manteve a saúde alta (${menorScore}/100).`);
+    } else if (temDado) {
+      insights.push(`ℹ️ A saúde de ${contexto} atingiu seu ponto mais baixo em **${piorDia}** (${menorScore}/100).`);
+    }
+
+    if (ofensoresData && ofensoresData.length > 0) {
+      const topOfensor = ofensoresData[0];
+      insights.push(`📌 O principal motivo de atrito no momento é **"${topOfensor.name}"** (${topOfensor.value} ocorrências).`);
+    }
+
+    const naoIniciados = trendData.reduce((acc, d) => acc + (d.naoIniciados || 0), 0);
+    if (naoIniciados > 0) {
+      insights.push(`⚠️ Existem **${naoIniciados}** conversas não iniciadas ou em stand-by neste recorte.`);
+    }
+
+    if (insights.length === 0) {
+      return ["A operação está estável, sem alertas críticos para este filtro."];
+    }
+    
+    return insights;
+  };
+
   return (
     <div className="dashboard-container">
       <header className="header">
@@ -426,8 +712,31 @@ function App() {
         </div>
       </header>
 
-      <div className="top-grid">
-        <div className="kpi-grid">
+      {(availableGroups.length > 0 || availableClients.length > 0) && (
+        <div className="glass-panel" style={{ display: 'flex', gap: '24px', padding: '16px 24px', marginBottom: '24px', alignItems: 'center', zIndex: 50, position: 'relative', background: 'var(--bg-card)', backdropFilter: 'none', WebkitBackdropFilter: 'none' }}>
+          <span style={{ fontWeight: 600, color: '#fff' }}>Filtros Globais:</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '13px', color: '#94a3b8' }}>Squad:</span>
+            <CustomSelect 
+              value={chartGroupFilter} 
+              onChange={setChartGroupFilter} 
+              options={availableGroups} 
+              placeholder="Todos"
+            />
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '13px', color: '#94a3b8' }}>Cliente (WhatsApp):</span>
+            <SearchableSelect 
+              value={chartClientFilter} 
+              onChange={setChartClientFilter} 
+              options={availableClients} 
+              placeholder="Todos"
+            />
+          </div>
+        </div>
+      )}
+
+      <div className="kpi-grid">
           <div className="glass-panel kpi-card">
             <div className="kpi-icon-wrapper success">
               <CheckCircle2 size={32} />
@@ -467,62 +776,138 @@ function App() {
               <div className="kpi-value">{dashboardData.kpis?.insatisfeitos ?? 0}</div>
             </div>
           </div>
+      </div>
+
+      <div className="top-grid">
+        
+        <div className="glass-panel chart-container">
+          <div className="insights-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h2 className="section-title" style={{ margin: 0 }}>
+              <Activity size={24} />
+              Termômetro de Interações (Mensagens por Dia)
+            </h2>
+          </div>
+          <div style={{ width: '100%', height: 200, marginTop: '20px' }}>
+            <ResponsiveContainer>
+              <BarChart data={trendData} barGap={2} barCategoryGap="30%">
+                <defs>
+                  <linearGradient id="colorSuccess" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#00e676" stopOpacity={1}/>
+                    <stop offset="95%" stopColor="#00e676" stopOpacity={0.4}/>
+                  </linearGradient>
+                  <linearGradient id="colorWarning" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#fbbf24" stopOpacity={1}/>
+                    <stop offset="95%" stopColor="#fbbf24" stopOpacity={0.4}/>
+                  </linearGradient>
+                  <linearGradient id="colorDanger" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#f43f5e" stopOpacity={1}/>
+                    <stop offset="95%" stopColor="#f43f5e" stopOpacity={0.4}/>
+                  </linearGradient>
+                  <linearGradient id="colorGray" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#64748b" stopOpacity={1}/>
+                    <stop offset="95%" stopColor="#64748b" stopOpacity={0.4}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                <XAxis dataKey="day" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} domain={[0, 100]} />
+                <Tooltip 
+                  cursor={{ fill: 'transparent' }}
+                  isAnimationActive={false}
+                  wrapperStyle={{ transition: 'none', visibility: 'visible', outline: 'none' }}
+                  content={({ active, payload, label }) => {
+                    if (active && payload && payload.length) {
+                      const data = payload[0].payload;
+                      return (
+                        <div style={{ background: 'var(--bg-main)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '12px', minWidth: '150px' }}>
+                          <p style={{ margin: '0 0 8px 0', fontWeight: 'bold', color: '#fff', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '4px' }}>{label}</p>
+                          {data.isNaoIniciadoOnly ? (
+                            <p style={{ margin: '0 0 8px 0', color: '#9ca3af', fontSize: '14px' }}><strong>Sem mensagens</strong></p>
+                          ) : (
+                            <p style={{ margin: '0 0 8px 0', color: '#fff', fontSize: '14px' }}>Média: <strong>{data.avgScore}</strong> / 100</p>
+                          )}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            {data.satisfeitos > 0 && <span style={{ color: 'var(--status-success)', fontSize: '12px' }}>● {data.satisfeitos} Satisfeito(s)</span>}
+                            {data.neutros > 0 && <span style={{ color: 'var(--status-warning)', fontSize: '12px' }}>● {data.neutros} Neutro(s)</span>}
+                            {data.insatisfeitos > 0 && <span style={{ color: 'var(--status-danger)', fontSize: '12px' }}>● {data.insatisfeitos} Insatisfeito(s)</span>}
+                            {data.naoIniciados > 0 && <span style={{ color: '#9ca3af', fontSize: '12px' }}>● {data.naoIniciados} Não Iniciado(s)</span>}
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                <Bar name="Temperatura Média" dataKey="avgScore" radius={[6, 6, 0, 0]} isAnimationActive={false} activeBar={false}>
+                  {trendData.map((entry, index) => {
+                    let fill = 'url(#colorWarning)'; 
+                    if (entry.isNaoIniciadoOnly) fill = 'url(#colorGray)'; 
+                    else if (entry.avgScore >= 80) fill = 'url(#colorSuccess)'; 
+                    else if (entry.avgScore <= 39) fill = 'url(#colorDanger)'; 
+                    return <Cell key={`cell-${index}`} fill={fill} />;
+                  })}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </div>
 
-        <div className="glass-panel chart-card donut-chart">
-          <h3>Distribuição de Saúde</h3>
-          <ResponsiveContainer width="100%" height={120}>
-            <PieChart>
-                <Pie
-                  data={donutData}
-                  innerRadius={40}
-                  outerRadius={60}
-                  paddingAngle={5}
-                  dataKey="value"
-                  stroke="none"
-                  isAnimationActive={true}
-                  animationDuration={1500}
-                  animationEasing="ease-out"
-                >
-                {donutData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip 
-                contentStyle={{ background: 'var(--bg-main)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }} 
-                itemStyle={{ color: '#fff' }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
+        <div className="glass-panel chart-card" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Sparkles size={20} color="#a855f7" />
+            <h3 style={{ margin: 0, color: '#a855f7' }}>Resumo Inteligente</h3>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', background: 'rgba(168, 85, 247, 0.05)', padding: '16px', borderRadius: '8px', borderLeft: '3px solid #a855f7' }}>
+            {generateSmartInsights().map((insight, idx) => {
+              const parts = insight.split('**');
+              return (
+                <p key={idx} style={{ margin: 0, fontSize: '14px', color: '#e2e8f0', lineHeight: '1.5' }}>
+                  {parts.map((part, i) => i % 2 === 1 ? <strong key={i} style={{ color: '#fff' }}>{part}</strong> : part)}
+                </p>
+              );
+            })}
+          </div>
         </div>
       </div>
 
       <div className="main-grid">
         
         <div className="left-col">
-          <div className="glass-panel chart-container">
-            <h2 className="section-title">
-              <Activity size={24} />
-              Evolução da Base (Novos Clientes)
-            </h2>
-            <div style={{ width: '100%', height: 200, marginTop: '20px' }}>
-              <ResponsiveContainer>
-                <BarChart data={trendData} barGap={2} barCategoryGap="20%">
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                  <XAxis dataKey="day" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
+          <div className="glass-panel chart-card donut-chart">
+            <h3>Principais Reclamações</h3>
+            {ofensoresData && ofensoresData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                    <Pie
+                      data={ofensoresData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={80}
+                      outerRadius={120}
+                      paddingAngle={5}
+                      dataKey="value"
+                      stroke="none"
+                      isAnimationActive={false}
+                    >
+                    {ofensoresData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COMPLAINT_COLORS[index % COMPLAINT_COLORS.length]} />
+                    ))}
+                  </Pie>
                   <Tooltip 
                     contentStyle={{ background: 'var(--bg-main)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }} 
-                    cursor={{ fill: 'rgba(255,255,255,0.03)' }}
+                    itemStyle={{ color: '#fff' }}
+                    formatter={(value, name) => [value, name]}
                   />
-                  <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '8px' }} />
-                  <Bar name="Satisfeitos" dataKey="satisfeitos" fill="var(--status-success)" radius={[4, 4, 0, 0]} />
-                  <Bar name="Neutros" dataKey="neutros" fill="var(--status-warning)" radius={[4, 4, 0, 0]} />
-                  <Bar name="Não Iniciados" dataKey="naoIniciados" fill="#9ca3af" radius={[4, 4, 0, 0]} />
-                  <Bar name="Insatisfeitos" dataKey="insatisfeitos" fill="var(--status-danger)" radius={[4, 4, 0, 0]} />
-                </BarChart>
+                </PieChart>
               </ResponsiveContainer>
-            </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '300px', gap: '12px', opacity: 0.7 }}>
+                <CheckCircle2 size={48} style={{ color: 'var(--status-success)' }} />
+                <p style={{ color: 'var(--text-secondary)', fontSize: '15px', textAlign: 'center', margin: 0 }}>
+                  Tudo certo por aqui!
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="glass-panel rescue-panel" style={{ marginTop: '24px' }}>
@@ -531,24 +916,10 @@ function App() {
                   <ShieldAlert size={24} />
                   Listagem de Clientes
                 </h2>
-                <div className="tab-container">
-                  <button 
-                    className={`tab-btn ${clientTab === 'urgentes' ? 'active' : ''}`}
-                    onClick={() => setClientTab('urgentes')}
-                  >
-                    Ação Imediata (Resgate)
-                  </button>
-                  <button 
-                    className={`tab-btn ${clientTab === 'todos' ? 'active' : ''}`}
-                    onClick={() => setClientTab('todos')}
-                  >
-                    Todos os Clientes
-                  </button>
-                </div>
               </div>
               
               {(() => {
-                const displayList = clientTab === 'urgentes' ? dashboardData.priorities : dashboardData.allClientsList;
+                const displayList = dashboardData.allClientsList;
                 if (displayList && displayList.length > 0) {
                   return (
                     <div className="priority-list">
@@ -636,9 +1007,7 @@ function App() {
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', gap: '12px', opacity: 0.7 }}>
                     <CheckCircle2 size={48} style={{ color: 'var(--status-success)' }} />
                     <p style={{ color: 'var(--text-secondary)', fontSize: '15px', textAlign: 'center', margin: 0 }}>
-                      {clientTab === 'urgentes' 
-                        ? 'Tudo tranquilo! Nenhum cliente precisa de atenção imediata. 🎉' 
-                        : 'Nenhum cliente encontrado neste período.'}
+                      Tudo tranquilo! Nenhum cliente encontrado neste recorte. 🎉
                     </p>
                   </div>
                 );
@@ -675,12 +1044,6 @@ function App() {
                 </h2>
                 <div className="tab-container">
                   <button 
-                    className={`tab-btn ${insightTab === 'general' ? 'active' : ''}`}
-                    onClick={() => setInsightTab('general')}
-                  >
-                    Geral (Base Inteira)
-                  </button>
-                  <button 
                     className={`tab-btn ${insightTab === 'isolado' ? 'active' : ''}`}
                     onClick={() => setInsightTab('isolado')}
                   >
@@ -692,14 +1055,31 @@ function App() {
                   >
                     Por Contexto (15 msgs)
                   </button>
+                  <button 
+                    className={`tab-btn ${insightTab === 'tom' ? 'active' : ''}`}
+                    onClick={() => setInsightTab('tom')}
+                  >
+                    Tom de Voz (Humor)
+                  </button>
                 </div>
               </div>
               
               <div className="insight-content" style={{ flex: 1, overflowY: 'auto', maxHeight: '300px', paddingRight: '8px' }}>
-                {insightTab === 'general' && dashboardData.generalSummary && (
-                  <p style={{ marginBottom: '0', lineHeight: '1.6', fontSize: '15px' }}>
-                    {dashboardData.generalSummary.replace(/\*\*/g, '')}
-                  </p>
+                {insightTab === 'tom' && (
+                  <div style={{ background: 'rgba(0,0,0,0.2)', padding: '16px', borderRadius: '8px', borderLeft: '3px solid var(--accent-blue)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <h4 style={{ margin: 0, fontSize: '14px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <UserCircle2 size={16} /> Análise Comportamental
+                    </h4>
+                    <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.6' }}>
+                      {dashboardData.kpis?.insatisfeitos > 0 
+                        ? "🔴 O clima atual está tenso. Os clientes estão majoritariamente ansiosos e frustrados, relatando urgência em retornos e clareza nos prazos."
+                        : (dashboardData.kpis?.satisfeitos > 0
+                          ? "🟢 O clima é amigável e receptivo. Os clientes demonstram alinhamento com as entregas e estão satisfeitos com o contato."
+                          : (dashboardData.kpis?.neutros > 0 
+                            ? "🟡 Clientes estão impacientes e aguardando resoluções. O tom é de cobrança passiva, sem grandes atritos no momento."
+                            : "⚪ Poucas interações recentes para determinar o tom predominante."))}
+                    </p>
+                  </div>
                 )}
                 
                 {(insightTab === 'isolado' || insightTab === 'contexto') && dashboardData.insights && dashboardData.insights.length > 0 && (

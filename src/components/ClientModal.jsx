@@ -20,12 +20,10 @@ export default function ClientModal({ client, onClose }) {
       if (scoreMatch[2]) label = scoreMatch[2].toUpperCase();
     }
     
-    // Risco de Churn
     let churn = null;
     const churnMatch = cleanBody.match(/Risco de Churn:\s*(\d+)%/i);
     if (churnMatch) churn = parseInt(churnMatch[1], 10);
 
-    // Mensagem do Cliente
     let messageStr = '';
     const msgMatch = cleanBody.match(/Cliente .*? disse:\s*"([^"]+)"/i) || cleanBody.match(/Cliente .*? disse:\s*([\s\S]*?)(?=📝|⚡|$)/i);
     if (msgMatch) {
@@ -34,12 +32,10 @@ export default function ClientModal({ client, onClose }) {
        messageStr = cleanBody; 
     }
 
-    // Resumo
     let resumo = '';
     const resumoMatch = cleanBody.match(/Resumo e Motivo:\s*([\s\S]*?)(?=⚡|$)/i);
     if (resumoMatch) resumo = resumoMatch[1].trim();
 
-    // Ações
     let actionItems = '';
     const actionMatch = cleanBody.match(/Itens de Ação Recomendados:\s*([\s\S]*?)(?=🏢|\[STATUS DA BUSCA\]|\[INFO DESEMPATE\]|\[DEBUG\]|$)/i);
     if (actionMatch) actionItems = actionMatch[1].trim();
@@ -85,7 +81,7 @@ export default function ClientModal({ client, onClose }) {
   const getLabelColor = (l) => {
     if (l === 'SATISFEITO') return '#10b981';
     if (l === 'INSATISFEITO') return '#ef4444';
-    return '#f59e0b'; // NEUTRO
+    return '#f59e0b'; 
   };
 
   return (
@@ -132,7 +128,6 @@ export default function ClientModal({ client, onClose }) {
             <h3><MessageSquare size={18} /> Histórico de Interações</h3>
             <div className="messages-list" style={{ gap: '16px', display: 'flex', flexDirection: 'column' }}>
               {messages.length > 0 ? messages.map((msg, i) => {
-                // Se não conseguimos extrair o resumo, assumimos que é uma mensagem normal sem IA
                 const isRich = msg.resumo !== '';
                 
                 return (
