@@ -368,7 +368,7 @@ function App() {
 
       const enrichedLeadsList = insights.slice(0, 4).map(i => ({
           name: i.name,
-          insight: i.text.length > 90 ? i.text.substring(0, 90) + '...' : i.text
+          insight: i.text
       }));
 
       setDashboardData(prev => ({
