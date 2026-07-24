@@ -109,5 +109,6 @@ body {
 
 .recharts-tooltip-cursor { display: none !important; }
 .recharts-active-bar { display: none !important; }
+.recharts-wrapper *:focus { outline: none !important; }
 
 
