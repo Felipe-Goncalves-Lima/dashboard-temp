@@ -23,5 +23,3 @@ dist-ssr
 *.sln
 *.sw?
 .env
-data_dashboard.json
-data_dashboard2.json
