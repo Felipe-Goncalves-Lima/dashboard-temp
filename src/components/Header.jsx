@@ -46,7 +46,7 @@ export const Header = ({
             />
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '13px', color: '#94a3b8' }}>Cliente (WhatsApp):</span>
+            <span style={{ fontSize: '13px', color: '#94a3b8' }}>Cliente:</span>
             <SearchableSelect 
               value={chartClientFilter} 
               onChange={setChartClientFilter} 
